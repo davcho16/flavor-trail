@@ -1,0 +1,31 @@
+/* src/components/SearchBar.css */
+
+.search-form {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+  }
+  
+  .search-form input {
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+  }
+  
+  .search-form button {
+    background-color: #007b5f;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  
+  .search-form button:hover {
+    background-color: #009e72;
+  }
+  

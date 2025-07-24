@@ -1,0 +1,42 @@
+/* src/pages/Home.css */
+
+.home-container {
+    max-width: 800px;
+    margin: auto;
+    padding: 2rem;
+    font-family: 'Segoe UI', sans-serif;
+    text-align: center;
+  }
+  
+  .results-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+  
+  .card {
+    background: #fdfdfd;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 1px 1px 8px rgba(0, 0, 0, 0.05);
+    text-align: left;
+  }
+  
+  .card h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+  }
+  
+  .card .price {
+    font-weight: bold;
+    color: #008c4a;
+  }
+  
+  .no-results {
+    margin-top: 2rem;
+    color: #777;
+  }
+  
