@@ -13,7 +13,7 @@ const pool = require('../db');
  */
 router.get('/search', async (req, res) => {
   const price = parseFloat(req.query.price);
-  const zip = req.query.zip?.trim(); // ✅ Trim whitespace
+  const zip = req.query.zip?.trim();
   const cuisine = req.query.cuisine?.trim();
 
   const limit = parseInt(req.query.limit) || 10;
