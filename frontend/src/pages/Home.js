@@ -1,29 +1,116 @@
-// src/pages/Home.js
 import React, { useState } from 'react';
+import axios from 'axios';
 import SearchBar from '../components/SearchBar';
+import MapView from '../components/MapView';
+import MenuModal from '../components/MenuModal';
 import './Home.css';
 
 const Home = () => {
   const [results, setResults] = useState([]);
+  const [currentPriceLimit, setCurrentPriceLimit] = useState(null); // changed from 0 to null
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [modalData, setModalData] = useState({
+    open: false,
+    restaurantName: '',
+    restaurantId: null,
+    menuItems: [],
+  });
+
+  const fetchPage = async (price, page) => {
+    const query = new URLSearchParams();
+    if (price !== null) query.append('price', price);
+    query.append('page', page);
+    query.append('limit', 10);
+
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/meals/search?${query.toString()}`
+      );
+      setResults(response.data);
+      setCurrentPage(page);
+    } catch (err) {
+      console.error('Error fetching meals:', err);
+    }
+  };
+
+  const handleSearch = (data, price, zip, cuisine) => {
+    const parsedPrice = price ? parseFloat(price) : null;
+    setCurrentPriceLimit(parsedPrice);
+    setResults(data);
+    setCurrentPage(1);
+    setModalData({ open: false, restaurantName: '', restaurantId: null, menuItems: [] });
+  };
+
+  const handleRestaurantClick = async (restaurantId, restaurantName) => {
+    const menuEndpoint = currentPriceLimit !== null
+      ? `/restaurants/${restaurantId}/menus/under/${currentPriceLimit}`
+      : `/restaurants/${restaurantId}/menus/all`;
+
+    try {
+      const response = await axios.get(`http://localhost:5000${menuEndpoint}`);
+      setModalData({
+        open: true,
+        restaurantName,
+        restaurantId,
+        menuItems: response.data,
+      });
+    } catch (err) {
+      console.error('Failed to fetch menu:', err);
+      setModalData({
+        open: true,
+        restaurantName,
+        restaurantId,
+        menuItems: [],
+      });
+    }
+  };
 
   return (
     <div className="home-container">
       <h1>Flavor Trail</h1>
-      <SearchBar onSearch={setResults} />
+      <SearchBar onSearch={handleSearch} />
+
+      {results.length > 0 && <MapView locations={results} />}
 
       <div className="results-container">
-        {results.length > 0 ? (
-          results.map((item, index) => (
-            <div className="card" key={index}>
-              <h3>{item.restaurant_name}</h3>
-              <p>{item.item_name}</p>
-              <p className="price">${parseFloat(item.item_price).toFixed(2)}</p>
-            </div>
-          ))
-        ) : (
-          <p className="no-results">Enter a price to find affordable meals 🍽️</p>
-        )}
+        {results.map((item, index) => (
+          <div
+            className="card"
+            key={index}
+            onClick={() => handleRestaurantClick(item.restaurant_id, item.restaurant_name)}
+          >
+            <h3>{item.restaurant_name}</h3>
+            <p>{item.street_address}</p>
+          </div>
+        ))}
       </div>
+
+      {results.length > 0 && (
+        <div className="pagination-controls">
+          <button
+            onClick={() => fetchPage(currentPriceLimit, currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            ◀ Prev
+          </button>
+          <span>Page {currentPage}</span>
+          <button
+            onClick={() => fetchPage(currentPriceLimit, currentPage + 1)}
+            disabled={results.length < 10}
+          >
+            Next ▶
+          </button>
+        </div>
+      )}
+
+      {modalData.open && (
+        <MenuModal
+          restaurantName={modalData.restaurantName}
+          menuItems={modalData.menuItems}
+          onClose={() => setModalData({ ...modalData, open: false })}
+        />
+      )}
     </div>
   );
 };

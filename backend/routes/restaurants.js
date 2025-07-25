@@ -1,9 +1,12 @@
-// backend/routes/restaurants.js
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// GET /restaurants/zip/:zip
+/**
+ * GET /restaurants/zip/:zip
+ * 
+ * Returns restaurants located in the specified ZIP code.
+ */
 router.get('/zip/:zip', async (req, res) => {
   const zip = req.params.zip;
   try {
@@ -18,7 +21,11 @@ router.get('/zip/:zip', async (req, res) => {
   }
 });
 
-// GET /restaurants/top-rated
+/**
+ * GET /restaurants/top-rated
+ * 
+ * Returns the top-rated restaurants based on review scores.
+ */
 router.get('/top-rated', async (req, res) => {
   try {
     const result = await pool.query(
@@ -36,7 +43,11 @@ router.get('/top-rated', async (req, res) => {
   }
 });
 
-// GET /restaurants/cuisine/:type
+/**
+ * GET /restaurants/cuisine/:type
+ * 
+ * Returns restaurants that serve a specific cuisine type.
+ */
 router.get('/cuisine/:type', async (req, res) => {
   const type = req.params.type;
   try {
@@ -49,6 +60,34 @@ router.get('/cuisine/:type', async (req, res) => {
        LIMIT 100`,
       [type]
     );
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
+
+/**
+ * GET /restaurants/:id/menus/under/:price
+ * 
+ * Returns all menu items under the given price for a specific restaurant.
+ * Used to display menu items in the modal view on frontend.
+ */
+router.get('/:id/menus/under/:price', async (req, res) => {
+  const { id, price } = req.params;
+
+  try {
+    const result = await pool.query(
+      `
+      SELECT m.item_name, m.item_price, m.item_description
+      FROM MenuItem m
+      JOIN Serves s ON m.menu_item_id = s.menu_item_id
+      WHERE s.restaurant_id = $1 AND m.item_price <= $2
+      ORDER BY m.item_price ASC
+      `,
+      [id, price]
+    );
+
     res.json(result.rows);
   } catch (err) {
     console.error(err.message);
