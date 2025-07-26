@@ -1,21 +1,18 @@
 import psycopg2
+from dotenv import load_dotenv
+import os
 
-# --- CONFIGURE THIS WITH YOUR OWN DATABASE INFO ---
-DB_HOST = "localhost"
-DB_NAME = "flavor_trail"
-DB_USER = "postgres"
-DB_PASS = "postgres123"
-DB_PORT = "5432"
-# ---------------------------------------------------
+# Load environment variables from .env file in the same folder
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '.env'))
 
 def connect():
     try:
         conn = psycopg2.connect(
-            host=DB_HOST,
-            dbname=DB_NAME,
-            user=DB_USER,
-            password=DB_PASS,
-            port=DB_PORT
+            host=os.getenv("DB_HOST"),
+            dbname=os.getenv("DB_NAME"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASS"),
+            port=os.getenv("DB_PORT")
         )
         return conn
     except Exception as e:
@@ -30,9 +27,23 @@ def run_query(sql):
     try:
         cur = conn.cursor()
         cur.execute(sql)
-        rows = cur.fetchall()
-        for row in rows:
-            print(row)
+
+        # If SELECT query, fetch and display results
+        if sql.strip().lower().startswith("select"):
+            rows = cur.fetchall()
+            colnames = [desc[0] for desc in cur.description]
+
+            print("\n🟦 Result:")
+            print("-" * 50)
+            print("\t".join(colnames))
+            print("-" * 50)
+            for row in rows:
+                print("\t".join(str(val) for val in row))
+            print("-" * 50 + "\n")
+        else:
+            conn.commit()
+            print("Query executed successfully.\n")
+
         cur.close()
     except Exception as e:
         print("Query failed:", e)
@@ -40,14 +51,13 @@ def run_query(sql):
         conn.close()
 
 def main():
-    print("Welcome to Flavor Trail CLI!")
-    print("Type SQL SELECT queries or 'exit' to quit.\n")
+    print("Flavor Trail CLI (Python)")
+    print("Type any SQL query or 'exit' to quit.\n")
     while True:
         sql = input("SQL> ")
         if sql.lower() == "exit":
             break
-        if not sql.strip().lower().startswith("select"):
-            print("Only SELECT queries are allowed.")
+        if not sql.strip():
             continue
         run_query(sql)
 
