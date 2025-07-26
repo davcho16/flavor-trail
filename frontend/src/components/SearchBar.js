@@ -5,13 +5,14 @@ import './SearchBar.css';
 /**
  * SearchBar component
  * 
- * Allows the user to input a maximum price, ZIP code, and cuisine type.
+ * Allows the user to input a maximum price, ZIP code, cuisine type, and minimum rating.
  * Builds a dynamic query and sends it to the backend.
  */
 const SearchBar = ({ onSearch }) => {
   const [price, setPrice] = useState('');
   const [zip, setZip] = useState('');
   const [cuisine, setCuisine] = useState('');
+  const [rating, setRating] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,15 +21,16 @@ const SearchBar = ({ onSearch }) => {
     if (price) query.append('price', price);
     if (zip) query.append('zip', zip);
     if (cuisine) query.append('cuisine', cuisine);
+    if (rating) query.append('rating', rating);
     query.append('page', 1);
     query.append('limit', 10);
 
     try {
       const response = await axios.get(`http://localhost:5000/meals/search?${query.toString()}`);
-      onSearch(response.data, price, zip, cuisine);
+      onSearch(response.data, price, zip, cuisine, rating);
     } catch (err) {
       console.error('Search request failed:', err.message);
-      onSearch([], price, zip, cuisine);
+      onSearch([], price, zip, cuisine, rating);
     }
   };
 
@@ -62,6 +64,19 @@ const SearchBar = ({ onSearch }) => {
           value={cuisine}
           onChange={(e) => setCuisine(e.target.value)}
           placeholder="e.g. Korean"
+        />
+      </label>
+
+      <label>
+        Min Rating:
+        <input
+          type="number"
+          value={rating}
+          onChange={(e) => setRating(e.target.value)}
+          min="0"
+          max="5"
+          step="0.1"
+          placeholder="e.g. 4.0"
         />
       </label>
 

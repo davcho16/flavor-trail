@@ -11,6 +11,9 @@ const Home = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [currentZip, setCurrentZip] = useState('');
   const [currentCuisine, setCurrentCuisine] = useState('');
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [modalData, setModalData] = useState({
     open: false,
@@ -19,32 +22,46 @@ const Home = () => {
     menuItems: [],
   });
 
-  const fetchPage = async (price, zip, cuisine, page) => {
+  const fetchPage = async (price, zip, cuisine, rating, page) => {
     const query = new URLSearchParams();
     if (price !== null) query.append('price', price);
     if (zip) query.append('zip', zip);
     if (cuisine) query.append('cuisine', cuisine);
+    if (rating) query.append('rating', rating);
     query.append('page', page);
     query.append('limit', 10);
 
     try {
+      setLoading(true);
       const response = await axios.get(
         `http://localhost:5000/meals/search?${query.toString()}`
       );
-      setResults(response.data);
+
+      const data = response.data.results;
+      setResults(data);
       setCurrentPage(page);
+      setTotalPages(Math.ceil(response.data.total / 10));
+
+      if (data.length === 0) {
+        setErrorMsg('No results found. Try a different search.');
+      } else {
+        setErrorMsg('');
+      }
     } catch (err) {
       console.error('Error fetching meals:', err);
+      setResults([]);
+      setErrorMsg('Error retrieving results.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSearch = (data, price, zip, cuisine) => {
+  const handleSearch = (data, price, zip, cuisine, rating) => {
     const parsedPrice = price ? parseFloat(price) : null;
     setCurrentPriceLimit(parsedPrice);
     setCurrentZip(zip);
     setCurrentCuisine(cuisine);
-    setResults(data);
-    setCurrentPage(1);
+    fetchPage(parsedPrice, zip, cuisine, rating, 1);
     setModalData({ open: false, restaurantName: '', restaurantId: null, menuItems: [] });
   };
 
@@ -74,8 +91,15 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      <h1>Flavor Trail</h1>
+      <header className="hero">
+        <h1>Flavor Trail</h1>
+        <p>Explore restaurants by price, rating, cuisine & more</p>
+      </header>
+
       <SearchBar onSearch={handleSearch} />
+
+      {loading && <div className="spinner" />}
+      {errorMsg && <p className="error">{errorMsg}</p>}
 
       {results.length > 0 && <MapView locations={results} />}
 
@@ -88,6 +112,8 @@ const Home = () => {
           >
             <h3>{item.restaurant_name}</h3>
             <p>{item.street_address}</p>
+            <p>Rating: {item.rating_score?.toFixed(1) || 'N/A'}</p>
+            <p>From ${parseFloat(item.item_price).toFixed(2)}</p>
           </div>
         ))}
       </div>
@@ -95,15 +121,19 @@ const Home = () => {
       {results.length > 0 && (
         <div className="pagination-controls">
           <button
-            onClick={() => fetchPage(currentPriceLimit, currentZip, currentCuisine, currentPage - 1)}
+            onClick={() =>
+              fetchPage(currentPriceLimit, currentZip, currentCuisine, null, currentPage - 1)
+            }
             disabled={currentPage === 1}
           >
             ◀ Prev
           </button>
-          <span>Page {currentPage}</span>
+          <span>Page {currentPage} of {totalPages}</span>
           <button
-            onClick={() => fetchPage(currentPriceLimit, currentZip, currentCuisine, currentPage + 1)}
-            disabled={results.length < 10}
+            onClick={() =>
+              fetchPage(currentPriceLimit, currentZip, currentCuisine, null, currentPage + 1)
+            }
+            disabled={currentPage === totalPages}
           >
             Next ▶
           </button>
