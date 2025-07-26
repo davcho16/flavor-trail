@@ -112,8 +112,17 @@ const Home = () => {
           >
             <h3>{item.restaurant_name}</h3>
             <p>{item.street_address}</p>
-            <p>Rating: {item.rating_score?.toFixed(1) || 'N/A'}</p>
-            <p>From ${parseFloat(item.item_price).toFixed(2)}</p>
+            <p>
+              Rating:{' '}
+              {isNaN(Number(item.rating_score))
+                ? 'N/A'
+                : Number(item.rating_score).toFixed(1)}
+            </p>
+            <p>
+              From ${isNaN(Number(item.item_price))
+                ? 'N/A'
+                : Number(item.item_price).toFixed(2)}
+            </p>
           </div>
         ))}
       </div>
