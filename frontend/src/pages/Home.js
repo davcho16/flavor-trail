@@ -7,8 +7,10 @@ import './Home.css';
 
 const Home = () => {
   const [results, setResults] = useState([]);
-  const [currentPriceLimit, setCurrentPriceLimit] = useState(null); // changed from 0 to null
+  const [currentPriceLimit, setCurrentPriceLimit] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentZip, setCurrentZip] = useState('');
+  const [currentCuisine, setCurrentCuisine] = useState('');
 
   const [modalData, setModalData] = useState({
     open: false,
@@ -17,9 +19,11 @@ const Home = () => {
     menuItems: [],
   });
 
-  const fetchPage = async (price, page) => {
+  const fetchPage = async (price, zip, cuisine, page) => {
     const query = new URLSearchParams();
     if (price !== null) query.append('price', price);
+    if (zip) query.append('zip', zip);
+    if (cuisine) query.append('cuisine', cuisine);
     query.append('page', page);
     query.append('limit', 10);
 
@@ -37,6 +41,8 @@ const Home = () => {
   const handleSearch = (data, price, zip, cuisine) => {
     const parsedPrice = price ? parseFloat(price) : null;
     setCurrentPriceLimit(parsedPrice);
+    setCurrentZip(zip);
+    setCurrentCuisine(cuisine);
     setResults(data);
     setCurrentPage(1);
     setModalData({ open: false, restaurantName: '', restaurantId: null, menuItems: [] });
@@ -89,14 +95,14 @@ const Home = () => {
       {results.length > 0 && (
         <div className="pagination-controls">
           <button
-            onClick={() => fetchPage(currentPriceLimit, currentPage - 1)}
+            onClick={() => fetchPage(currentPriceLimit, currentZip, currentCuisine, currentPage - 1)}
             disabled={currentPage === 1}
           >
             ◀ Prev
           </button>
           <span>Page {currentPage}</span>
           <button
-            onClick={() => fetchPage(currentPriceLimit, currentPage + 1)}
+            onClick={() => fetchPage(currentPriceLimit, currentZip, currentCuisine, currentPage + 1)}
             disabled={results.length < 10}
           >
             Next ▶
