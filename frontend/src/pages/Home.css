@@ -14,45 +14,58 @@ body {
 }
 
 .hero {
-  text-align: center;
-  padding: 80px 20px 40px;
-  background: linear-gradient(to bottom, #f2f4f7, #fff);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem 2rem;
+  background-color: #f6f8fa;
   border-bottom: 1px solid #e5e7eb;
 }
 
 .hero h1 {
-  font-size: 3.2rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #111827;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.5px;
 }
 
 .hero p {
-  font-size: 1.2rem;
-  color: #6b7280;
+  font-size: 1.125rem;
+  font-weight: 400;
+  color: #475569;
+  margin-top: 0.5rem;
+  max-width: 700px;
+  text-align: center;
 }
 
 .results-container {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-  margin-top: 2rem;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 2rem;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .card {
-  background-color: #ffffff;
-  border-radius: 16px;
+  background: #ffffff;
   padding: 1.5rem;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.03);
-  transition: all 0.2s ease;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.2s ease;
+  height: 100%;
+  min-height: 360px;
 }
 
 .card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.08);
+  transform: translateY(-4px);
 }
 
 .card h3 {
@@ -60,6 +73,7 @@ body {
   font-weight: 600;
   color: #111827;
   margin-bottom: 0.5rem;
+  word-break: break-word;
 }
 
 .card p {
@@ -68,26 +82,43 @@ body {
   margin: 0.25rem 0;
 }
 
+.card-content {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+/* General button base style */
 .card button {
-  margin-top: 1rem;
-  background-color: #0f766e;
-  color: white;
   padding: 0.6rem 1rem;
-  font-size: 0.95rem;
-  border: none;
   border-radius: 6px;
+  font-weight: 500;
+  background-color: #007b5f;
+  color: white;
+  border: none;
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
-.card button + button {
-  margin-left: 0.5rem;
-}
-
 .card button:hover {
-  background-color: #0d4f48;
+  background-color: #005e47;
 }
 
+/* Full-width vertically stacked buttons */
+.card-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.card-buttons button {
+  width: 100%;
+}
+
+/* Pagination styles */
 .pagination-controls {
   margin: 2rem 0;
   display: flex;
@@ -111,6 +142,7 @@ body {
   background: #1e293b;
 }
 
+/* Loading spinner */
 .spinner {
   margin: 2rem auto;
   width: 48px;
@@ -127,6 +159,7 @@ body {
   }
 }
 
+/* Error message */
 .error {
   text-align: center;
   color: #dc2626;

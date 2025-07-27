@@ -1,8 +1,4 @@
 // Home.js
-// Main page of the application. Coordinates the search, display, and interaction features.
-// Renders search bar, map, results list, and modals for viewing menus and managing reservations.
-// Manages core state, query parameters, pagination, loading status, and modal visibility.
-
 import React, { useState } from 'react';
 import axios from 'axios';
 
@@ -14,7 +10,6 @@ import ViewReservationsModal from '../components/ViewReservationsModal';
 import './Home.css';
 
 const Home = () => {
-  // State variables for filtering and pagination
   const [results, setResults] = useState([]);
   const [currentPriceLimit, setCurrentPriceLimit] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -24,7 +19,6 @@ const Home = () => {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Modal control state
   const [modalData, setModalData] = useState({
     open: false,
     restaurantName: '',
@@ -42,15 +36,14 @@ const Home = () => {
     restaurant: null,
   });
 
-  // Fetches a page of restaurant results based on current filters
   const fetchPage = async (price, zip, cuisine, rating, page) => {
     const query = new URLSearchParams();
-    if (price !== null) query.append('price', price);
-    if (zip) query.append('zip', zip);
-    if (cuisine) query.append('cuisine', cuisine);
-    if (rating) query.append('rating', rating);
+      if (price !== null && price !== '') query.append('price', price);
+      if (zip) query.append('zip', zip);
+      if (cuisine) query.append('cuisine', cuisine);
+      if (rating !== null && rating !== '') query.append('rating', rating);
     query.append('page', page);
-    query.append('limit', 10);
+    query.append('limit', 12);
 
     try {
       setLoading(true);
@@ -70,7 +63,6 @@ const Home = () => {
     }
   };
 
-  // Invoked by SearchBar with the result data and user input filters
   const handleSearch = (data, price, zip, cuisine, rating) => {
     const parsedPrice = price ? parseFloat(price) : null;
     setCurrentPriceLimit(parsedPrice);
@@ -80,7 +72,6 @@ const Home = () => {
     setModalData({ open: false, restaurantName: '', restaurantId: null, menuItems: [] });
   };
 
-  // Fetches menu items for a selected restaurant and displays them in a modal
   const handleRestaurantClick = async (restaurantId, restaurantName) => {
     const menuEndpoint = currentPriceLimit !== null
       ? `/restaurants/${restaurantId}/menus/under/${currentPriceLimit}`
@@ -105,12 +96,10 @@ const Home = () => {
     }
   };
 
-  // Opens reservation modal for the selected restaurant
   const handleReserveClick = (restaurant) => {
     setReservationModal({ open: true, restaurant });
   };
 
-  // Opens reservation view modal for the selected restaurant
   const handleViewReservationsClick = (restaurant) => {
     setViewModal({ open: true, restaurant });
   };
@@ -136,13 +125,18 @@ const Home = () => {
           };
           return (
             <div className="card" key={index}>
-              <h3>{item.restaurant_name}</h3>
-              <p>{item.street_address}</p>
-              <p>Rating: {isNaN(item.rating_score) ? 'N/A' : Number(item.rating_score).toFixed(1)}</p>
-              <p>From ${isNaN(item.item_price) ? 'N/A' : Number(item.item_price).toFixed(2)}</p>
-              <button onClick={() => handleRestaurantClick(restaurant.id, restaurant.name)}>View Menu</button>
-              <button onClick={() => handleReserveClick(restaurant)}>Reserve</button>
-              <button onClick={() => handleViewReservationsClick(restaurant)}>View Reservations</button>
+              <div className="card-content">
+                <h3>{item.restaurant_name}</h3>
+                <p>{item.street_address}</p>
+                <p>Rating: {isNaN(item.rating_score) ? 'N/A' : Number(item.rating_score).toFixed(1)}</p>
+                <p>From ${isNaN(item.item_price) ? 'N/A' : Number(item.item_price).toFixed(2)}</p>
+              </div>
+
+              <div className="card-buttons">
+                <button onClick={() => handleRestaurantClick(restaurant.id, restaurant.name)}>View Menu</button>
+                <button onClick={() => handleReserveClick(restaurant)}>Reserve</button>
+                <button onClick={() => handleViewReservationsClick(restaurant)}>View Reservations</button>
+              </div>
             </div>
           );
         })}

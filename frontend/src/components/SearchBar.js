@@ -1,15 +1,6 @@
-// SearchBar.js
-// React component that provides input fields for filtering restaurants by:
-// - Maximum item price
-// - ZIP code
-// - Cuisine type
-// - Minimum rating
-// Constructs a query string and sends a GET request to the backend `/meals/search` endpoint.
-// The resulting data and query filters are passed to the parent component via the `onSearch` callback.
-
+// src/components/SearchBar.js
 import React, { useState } from 'react';
-import axios from 'axios';
-import './SearchBar.css'; // Layout and button styling for the search form
+import './SearchBar.css';
 
 const SearchBar = ({ onSearch }) => {
   const [price, setPrice] = useState('');
@@ -17,75 +8,42 @@ const SearchBar = ({ onSearch }) => {
   const [cuisine, setCuisine] = useState('');
   const [rating, setRating] = useState('');
 
-  // Constructs query parameters and fetches filtered restaurant data from the backend
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-
-    const query = new URLSearchParams();
-    if (price) query.append('price', price);
-    if (zip) query.append('zip', zip);
-    if (cuisine) query.append('cuisine', cuisine);
-    if (rating) query.append('rating', rating);
-    query.append('page', 1);
-    query.append('limit', 10);
-
-    try {
-      const response = await axios.get(`http://localhost:5000/meals/search?${query.toString()}`);
-      onSearch(response.data, price, zip, cuisine, rating);
-    } catch (err) {
-      console.error('Search request failed:', err.message);
-      onSearch([], price, zip, cuisine, rating);
-    }
+    onSearch(null, price, zip, cuisine, rating);
   };
 
   return (
-    <form className="search-form" onSubmit={handleSubmit}>
-      <label>
-        Max Price:
+    <div className="searchbar-container">
+      <form className="searchbar-form" onSubmit={handleSubmit}>
         <input
           type="number"
+          placeholder="Max Price"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          min="0"
-          placeholder="e.g. 15"
         />
-      </label>
-
-      <label>
-        ZIP Code:
         <input
           type="text"
+          placeholder="ZIP Code"
           value={zip}
           onChange={(e) => setZip(e.target.value)}
-          placeholder="e.g. 97209"
         />
-      </label>
-
-      <label>
-        Cuisine Type:
         <input
           type="text"
+          placeholder="Cuisine Type"
           value={cuisine}
           onChange={(e) => setCuisine(e.target.value)}
-          placeholder="e.g. Korean"
         />
-      </label>
-
-      <label>
-        Min Rating:
         <input
           type="number"
+          step="0.1"
+          placeholder="Min Rating"
           value={rating}
           onChange={(e) => setRating(e.target.value)}
-          min="0"
-          max="5"
-          step="0.1"
-          placeholder="e.g. 4.0"
         />
-      </label>
-
-      <button type="submit">Search</button>
-    </form>
+        <button type="submit">Search</button>
+      </form>
+    </div>
   );
 };
 

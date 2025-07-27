@@ -79,16 +79,15 @@ hr {
 }
 
 .menu-item {
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #f0f0f0;
-  transition: background 0.2s ease;
+  padding: 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .menu-item:hover {
-  background-color: #f9fafb;
-  border-radius: 8px;
-  padding: 0.75rem;
+  border-color: #ccc;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .menu-header {

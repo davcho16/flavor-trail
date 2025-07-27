@@ -1,11 +1,11 @@
 // meals.js
-// Express route handler for searching restaurants based on flexible filters.
-// Supports query parameters for:
+// Express route handler for searching restaurants with flexible filters.
+// Applies optional query parameters for:
 // - Maximum menu item price
 // - ZIP code
 // - Cuisine type (case-insensitive partial match)
 // - Minimum restaurant rating
-// - Pagination via `page` and `limit`
+// - Pagination via page and limit
 // Returns both the total number of matched restaurants and the current page of results.
 
 const express = require('express');
@@ -25,18 +25,18 @@ router.get('/search', async (req, res) => {
   const values = [];
   let paramIndex = 1;
 
-  // Required table joins to relate restaurants with menu items and reviews
+  // Use LEFT JOINs to avoid filtering out restaurants that lack menu items or reviews
   let joins = `
-    JOIN Serves s ON r.restaurant_id = s.restaurant_id
-    JOIN MenuItem m ON s.menu_item_id = m.menu_item_id
-    JOIN Has h ON r.restaurant_id = h.restaurant_id
-    JOIN RestaurantReview rr ON h.review_id = rr.review_id
+    LEFT JOIN Serves s ON r.restaurant_id = s.restaurant_id
+    LEFT JOIN MenuItem m ON s.menu_item_id = m.menu_item_id
+    LEFT JOIN Has h ON r.restaurant_id = h.restaurant_id
+    LEFT JOIN RestaurantReview rr ON h.review_id = rr.review_id
   `;
 
   let where = `1=1`;
 
   if (!isNaN(price)) {
-    where += ` AND m.item_price <= $${paramIndex}`;
+    where += ` AND m.item_price IS NOT NULL AND m.item_price <= $${paramIndex}`;
     values.push(price);
     paramIndex++;
   }
@@ -49,8 +49,8 @@ router.get('/search', async (req, res) => {
 
   if (cuisine) {
     joins += `
-      JOIN Offers o ON r.restaurant_id = o.restaurant_id
-      JOIN CuisineType c ON o.cuisine_id = c.cuisine_id
+      LEFT JOIN Offers o ON r.restaurant_id = o.restaurant_id
+      LEFT JOIN CuisineType c ON o.cuisine_id = c.cuisine_id
     `;
     where += ` AND c.cuisine_name ILIKE $${paramIndex}`;
     values.push(`%${cuisine}%`);
@@ -58,12 +58,12 @@ router.get('/search', async (req, res) => {
   }
 
   if (!isNaN(rating)) {
-    where += ` AND rr.rating_score >= $${paramIndex}`;
+    where += ` AND rr.rating_score IS NOT NULL AND rr.rating_score >= $${paramIndex}`;
     values.push(rating);
     paramIndex++;
   }
 
-  // First query to count total number of distinct matched restaurants
+  // Query to count total distinct restaurants matching filters
   const countQuery = `
     SELECT COUNT(DISTINCT r.restaurant_id) AS total
     FROM Restaurant r
@@ -71,7 +71,7 @@ router.get('/search', async (req, res) => {
     WHERE ${where};
   `;
 
-  // Second query to return current page of results
+  // Query to return results for the current page
   const dataQuery = `
     SELECT
       r.restaurant_id,
@@ -80,12 +80,12 @@ router.get('/search', async (req, res) => {
       r.zip_code,
       r.latitude,
       r.longitude,
-      rr.rating_score,
+      MAX(rr.rating_score) AS rating_score,
       MIN(m.item_price) AS item_price
     FROM Restaurant r
     ${joins}
     WHERE ${where}
-    GROUP BY r.restaurant_id, rr.rating_score
+    GROUP BY r.restaurant_id
     ORDER BY r.restaurant_name
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1};
   `;

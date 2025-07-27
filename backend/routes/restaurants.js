@@ -75,3 +75,27 @@ router.get('/:id/menus/under/:price', async (req, res) => {
 });
 
 module.exports = router;
+
+/**
+ * GET /restaurants/:id/menus/all
+ * Returns all menu items for a given restaurant, unfiltered by price.
+ */
+router.get('/:id/menus/all', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT m.item_name, m.item_price, m.item_description
+       FROM MenuItem m
+       JOIN Serves s ON m.menu_item_id = s.menu_item_id
+       WHERE s.restaurant_id = $1
+       ORDER BY m.item_price ASC`,
+      [id]
+    );
+
+    res.json(result.rows);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server error');
+  }
+});
