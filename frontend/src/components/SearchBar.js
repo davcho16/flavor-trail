@@ -1,19 +1,23 @@
+// SearchBar.js
+// React component that provides input fields for filtering restaurants by:
+// - Maximum item price
+// - ZIP code
+// - Cuisine type
+// - Minimum rating
+// Constructs a query string and sends a GET request to the backend `/meals/search` endpoint.
+// The resulting data and query filters are passed to the parent component via the `onSearch` callback.
+
 import React, { useState } from 'react';
 import axios from 'axios';
-import './SearchBar.css';
+import './SearchBar.css'; // Layout and button styling for the search form
 
-/**
- * SearchBar component
- * 
- * Allows the user to input a maximum price, ZIP code, cuisine type, and minimum rating.
- * Builds a dynamic query and sends it to the backend.
- */
 const SearchBar = ({ onSearch }) => {
   const [price, setPrice] = useState('');
   const [zip, setZip] = useState('');
   const [cuisine, setCuisine] = useState('');
   const [rating, setRating] = useState('');
 
+  // Constructs query parameters and fetches filtered restaurant data from the backend
   const handleSubmit = async (e) => {
     e.preventDefault();
 

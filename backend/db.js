@@ -1,4 +1,7 @@
-// Connecting Postgres DB to the backend
+// db.js
+// Initializes and exports a PostgreSQL connection pool using the `pg` library.
+// Reads database credentials from environment variables defined in a .env file.
+
 const { Pool } = require('pg');
 require('dotenv').config();
 

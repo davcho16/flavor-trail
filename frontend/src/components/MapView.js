@@ -1,9 +1,13 @@
-// src/components/MapView.js
+// MapView.js
+// React component that displays restaurant locations on an interactive map using Leaflet.
+// Filters out invalid or missing coordinates before rendering markers.
+// Each marker includes a popup showing the restaurant name and address.
+
 import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// marker icons for Leaflet in React
+// Customizes default Leaflet marker icons for use in React
 import L from 'leaflet';
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -13,7 +17,7 @@ L.Icon.Default.mergeOptions({
 });
 
 const MapView = ({ locations }) => {
-  // Filter out invalid lat/lng
+  // Filters out invalid lat/lng values to avoid runtime errors
   const filtered = locations.filter(
     (loc) =>
       loc.latitude !== null &&
@@ -24,7 +28,7 @@ const MapView = ({ locations }) => {
 
   return (
     <MapContainer
-      center={[39.5, -98.35]} // Default center: USA
+      center={[39.5, -98.35]} // Default map center
       zoom={4}
       scrollWheelZoom={true}
       style={{ height: '500px', width: '100%', marginBottom: '2rem' }}
@@ -38,10 +42,10 @@ const MapView = ({ locations }) => {
           key={index}
           position={[parseFloat(loc.latitude), parseFloat(loc.longitude)]}
         >
-            <Popup>
+          <Popup>
             <strong>{loc.restaurant_name}</strong><br />
             {loc.street_address}
-            </Popup>
+          </Popup>
         </Marker>
       ))}
     </MapContainer>

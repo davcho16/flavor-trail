@@ -1,11 +1,16 @@
+// restaurants.js
+// Express route handler for retrieving restaurant-related data.
+// Includes endpoints for ZIP code lookup, top-rated restaurants, cuisine-specific filtering,
+// and viewing a restaurant’s menu items under a given price.
+
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
 /**
  * GET /restaurants/zip/:zip
- * 
- * Returns restaurants located in the specified ZIP code.
+ * Returns a list of restaurants located in the specified ZIP code.
+ * Limited to 100 results to prevent overload.
  */
 router.get('/zip/:zip', async (req, res) => {
   const zip = req.params.zip;
@@ -22,31 +27,8 @@ router.get('/zip/:zip', async (req, res) => {
 });
 
 /**
- * GET /restaurants/top-rated
- * 
- * Returns the top-rated restaurants based on review scores.
- */
-router.get('/top-rated', async (req, res) => {
-  try {
-    const result = await pool.query(
-      `SELECT r.*, rr.rating_score
-       FROM Restaurant r
-       JOIN Has h ON r.restaurant_id = h.restaurant_id
-       JOIN RestaurantReview rr ON h.review_id = rr.review_id
-       ORDER BY rr.rating_score DESC
-       LIMIT 50`
-    );
-    res.json(result.rows);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
-  }
-});
-
-/**
  * GET /restaurants/cuisine/:type
- * 
- * Returns restaurants that serve a specific cuisine type.
+ * Returns restaurants that offer a specific cuisine type (case-insensitive match).
  */
 router.get('/cuisine/:type', async (req, res) => {
   const type = req.params.type;
@@ -69,22 +51,19 @@ router.get('/cuisine/:type', async (req, res) => {
 
 /**
  * GET /restaurants/:id/menus/under/:price
- * 
- * Returns all menu items under the given price for a specific restaurant.
- * Used to display menu items in the modal view on frontend.
+ * Returns menu items under a specified price for a given restaurant.
+ * Used for filtering affordable items in the modal view.
  */
 router.get('/:id/menus/under/:price', async (req, res) => {
   const { id, price } = req.params;
 
   try {
     const result = await pool.query(
-      `
-      SELECT m.item_name, m.item_price, m.item_description
-      FROM MenuItem m
-      JOIN Serves s ON m.menu_item_id = s.menu_item_id
-      WHERE s.restaurant_id = $1 AND m.item_price <= $2
-      ORDER BY m.item_price ASC
-      `,
+      `SELECT m.item_name, m.item_price, m.item_description
+       FROM MenuItem m
+       JOIN Serves s ON m.menu_item_id = s.menu_item_id
+       WHERE s.restaurant_id = $1 AND m.item_price <= $2
+       ORDER BY m.item_price ASC`,
       [id, price]
     );
 

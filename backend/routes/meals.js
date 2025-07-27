@@ -1,14 +1,17 @@
+// meals.js
+// Express route handler for searching restaurants based on flexible filters.
+// Supports query parameters for:
+// - Maximum menu item price
+// - ZIP code
+// - Cuisine type (case-insensitive partial match)
+// - Minimum restaurant rating
+// - Pagination via `page` and `limit`
+// Returns both the total number of matched restaurants and the current page of results.
+
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-/**
- * GET /meals/search
- * 
- * Returns restaurants that offer at least one menu item under the given price.
- * Optional filters: ZIP code, cuisine, minimum rating.
- * Supports pagination via page + limit.
- */
 router.get('/search', async (req, res) => {
   const price = parseFloat(req.query.price);
   const zip = req.query.zip?.trim();
@@ -22,6 +25,7 @@ router.get('/search', async (req, res) => {
   const values = [];
   let paramIndex = 1;
 
+  // Required table joins to relate restaurants with menu items and reviews
   let joins = `
     JOIN Serves s ON r.restaurant_id = s.restaurant_id
     JOIN MenuItem m ON s.menu_item_id = m.menu_item_id
@@ -59,6 +63,7 @@ router.get('/search', async (req, res) => {
     paramIndex++;
   }
 
+  // First query to count total number of distinct matched restaurants
   const countQuery = `
     SELECT COUNT(DISTINCT r.restaurant_id) AS total
     FROM Restaurant r
@@ -66,6 +71,7 @@ router.get('/search', async (req, res) => {
     WHERE ${where};
   `;
 
+  // Second query to return current page of results
   const dataQuery = `
     SELECT
       r.restaurant_id,

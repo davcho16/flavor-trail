@@ -1,9 +1,15 @@
-// backend/routes/reservations.js
+// reservations.js
+// Express route handler for managing restaurant reservations.
+// Supports creating, reading, updating, and deleting reservations.
+// Relies on two tables:
+// - `reservation`: holds user info, party size, and time
+// - `makesreservation`: join table linking reservations to restaurants
+
 const express = require('express');
 const router = express.Router();
 const pool = require('../db');
 
-// Create new reservation
+// Create a new reservation and link it to a restaurant
 router.post('/', async (req, res) => {
   try {
     const { user_name, reservation_time, party_size, restaurant_id } = req.body;
@@ -33,7 +39,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get reservations for a user and restaurant
+// Retrieve all reservations by a user for a specific restaurant
 router.get('/', async (req, res) => {
   const { user_name, restaurant_id } = req.query;
   try {
@@ -51,7 +57,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Cancel reservation
+// Delete a reservation by its ID (used for cancellation)
 router.delete('/:id', async (req, res) => {
   const { id } = req.params;
   try {
@@ -64,7 +70,7 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// Update reservation
+// Update reservation time or party size
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { reservation_time, party_size } = req.body;

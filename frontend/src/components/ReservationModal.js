@@ -1,6 +1,11 @@
-// components/ReservationModal.js
+// ReservationModal.js
+// React component that allows users to create and cancel reservations for a selected restaurant.
+// Uses a modal interface with form inputs for name, date/time, and party size.
+// Sends a POST request to create a reservation and a DELETE request to cancel it.
+// Also displays a success or error message based on server response.
+
 import React, { useState, useEffect } from 'react';
-import './MenuModal.css'; // Reuse modal styling
+import './MenuModal.css'; // Shared modal styling
 import axios from 'axios';
 
 const ReservationModal = ({ isOpen, onClose, restaurant }) => {
@@ -10,6 +15,7 @@ const ReservationModal = ({ isOpen, onClose, restaurant }) => {
   const [successMessage, setSuccessMessage] = useState('');
   const [latestReservation, setLatestReservation] = useState(null);
 
+  // Sends reservation data to the backend to create a new reservation
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -20,7 +26,7 @@ const ReservationModal = ({ isOpen, onClose, restaurant }) => {
         restaurant_id: restaurant.id,
       });
 
-      setSuccessMessage('Reservation confirmed!');
+      setSuccessMessage('Reservation confirmed');
       setLatestReservation(response.data);
       setUserName('');
       setReservationTime('');
@@ -31,11 +37,12 @@ const ReservationModal = ({ isOpen, onClose, restaurant }) => {
     }
   };
 
+  // Cancels the most recent reservation if one was created during this session
   const handleCancel = async () => {
     if (!latestReservation) return;
     try {
       await axios.delete(`http://localhost:5000/reservations/${latestReservation.reservation_id}`);
-      setSuccessMessage('Reservation cancelled!');
+      setSuccessMessage('Reservation cancelled');
       setLatestReservation(null);
     } catch (error) {
       console.error('Cancellation failed:', error);
@@ -43,6 +50,7 @@ const ReservationModal = ({ isOpen, onClose, restaurant }) => {
     }
   };
 
+  // Resets modal state when the modal is closed
   useEffect(() => {
     if (!isOpen) {
       setSuccessMessage('');
