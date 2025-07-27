@@ -5,6 +5,8 @@
 // Also displays a success or error message based on server response.
 
 import React, { useState, useEffect } from 'react';
+import Flatpickr from 'react-flatpickr';
+import 'flatpickr/dist/themes/material_green.css';
 import './MenuModal.css'; // Shared modal styling
 import axios from 'axios';
 
@@ -18,6 +20,19 @@ const ReservationModal = ({ isOpen, onClose, restaurant }) => {
   // Sends reservation data to the backend to create a new reservation
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!reservationTime) {
+      setSuccessMessage('Please select a time.');
+      return;
+    }
+
+    const time = new Date(reservationTime);
+    const mins = time.getMinutes();
+    if (mins !== 0 && mins !== 30) {
+      setSuccessMessage('Please select a time ending in :00 or :30 only.');
+      return;
+    }
+
     try {
       const response = await axios.post('http://localhost:5000/reservations', {
         user_name: userName,
@@ -33,7 +48,11 @@ const ReservationModal = ({ isOpen, onClose, restaurant }) => {
       setPartySize(1);
     } catch (error) {
       console.error('Reservation failed:', error);
-      setSuccessMessage('Reservation failed');
+      if (error.response?.data?.message) {
+        setSuccessMessage(error.response.data.message);
+      } else {
+        setSuccessMessage('Reservation failed');
+      }
     }
   };
 
@@ -79,11 +98,15 @@ const ReservationModal = ({ isOpen, onClose, restaurant }) => {
             />
 
             <label>Time:</label>
-            <input
-              type="datetime-local"
+            <Flatpickr
               value={reservationTime}
-              onChange={(e) => setReservationTime(e.target.value)}
-              required
+              options={{
+                enableTime: true,
+                dateFormat: 'Y-m-d H:i',
+                minuteIncrement: 30,
+                minDate: 'today'
+              }}
+              onChange={([date]) => setReservationTime(date)}
             />
 
             <label>Party Size:</label>
