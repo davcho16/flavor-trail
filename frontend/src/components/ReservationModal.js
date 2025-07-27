@@ -47,11 +47,11 @@ const ReservationModal = ({ isOpen, onClose, restaurant }) => {
       setReservationTime('');
       setPartySize(1);
     } catch (error) {
-      console.error('Reservation failed:', error);
+      console.error('Reservation failed', error);
       if (error.response?.data?.message) {
         setSuccessMessage(error.response.data.message);
       } else {
-        setSuccessMessage('Reservation failed');
+        setSuccessMessage('No available seating, please pick another timeslot');
       }
     }
   };

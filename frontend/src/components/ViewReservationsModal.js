@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Flatpickr from 'react-flatpickr';
+import 'flatpickr/dist/themes/material_green.css';
 import './MenuModal.css';
 import './ViewReservationsModal.css';
 import axios from 'axios';
@@ -69,6 +71,13 @@ const ViewReservationsModal = ({ isOpen, onClose, restaurant }) => {
       return;
     }
 
+    const time = new Date(changes.newTime);
+    const mins = time.getMinutes();
+    if (mins !== 0 && mins !== 30) {
+      setError('Time must be on the hour or half hour (e.g., 6:00, 6:30)');
+      return;
+    }
+
     try {
       await axios.put(`http://localhost:5000/reservations/${id}`, {
         reservation_time: changes.newTime,
@@ -126,9 +135,20 @@ const ViewReservationsModal = ({ isOpen, onClose, restaurant }) => {
                 <li
                   key={r.reservation_id}
                   className="menu-item"
-                  onClick={() =>
-                    setSelectedId((prev) => (prev === r.reservation_id ? null : r.reservation_id))
-                  }
+                  onClick={() => {
+                    const alreadyOpen = selectedId === r.reservation_id;
+                    setSelectedId(alreadyOpen ? null : r.reservation_id);
+
+                    if (!alreadyOpen && !editStates[r.reservation_id]) {
+                      setEditStates((prev) => ({
+                        ...prev,
+                        [r.reservation_id]: {
+                          newTime: new Date(r.reservation_time),
+                          newPartySize: r.party_size
+                        }
+                      }));
+                    }
+                  }}
                   style={{ cursor: 'pointer' }}
                 >
                   <div className="menu-header">
@@ -138,18 +158,42 @@ const ViewReservationsModal = ({ isOpen, onClose, restaurant }) => {
                   <p>Time: {new Date(r.reservation_time).toLocaleString()}</p>
 
                   {selectedId === r.reservation_id && (
-                    <div className="edit-section">
+                    <div
+                      className="edit-section"
+                      onClick={(e) => e.stopPropagation()} // prevents click collapse
+                    >
                       <label>New Time:</label>
-                      <input
-                        type="datetime-local"
-                        onChange={(e) =>
-                          updateEditState(r.reservation_id, 'newTime', e.target.value)
+                      <Flatpickr
+                        value={editStates[r.reservation_id]?.newTime || ''}
+                        options={{
+                          enableTime: true,
+                          dateFormat: 'Y-m-d H:i',
+                          minuteIncrement: 30,
+                          minDate: 'today'
+                        }}
+                        onOpen={(selectedDates, dateStr, instance) => {
+                          // prevent toggle collapse
+                          setTimeout(() => {
+                            const input = instance._input;
+                            if (input) {
+                              input.addEventListener(
+                                'click',
+                                (e) => e.stopPropagation(),
+                                { once: true }
+                              );
+                            }
+                          });
+                        }}
+                        onChange={([date]) =>
+                          updateEditState(r.reservation_id, 'newTime', date)
                         }
                       />
+
                       <label>New Party Size:</label>
                       <input
                         type="number"
                         min="1"
+                        value={editStates[r.reservation_id]?.newPartySize || ''}
                         onChange={(e) =>
                           updateEditState(r.reservation_id, 'newPartySize', e.target.value)
                         }
