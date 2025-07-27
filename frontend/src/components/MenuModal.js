@@ -21,7 +21,9 @@ const MenuModal = ({ restaurantName, menuItems, onClose }) => {
               <li key={index} className="menu-item">
                 <div className="menu-header">
                   <span className="menu-name">{item.item_name}</span>
-                  <span className="menu-price">${item.item_price.toFixed(2)}</span>
+                  <span className="menu-price">
+                    {isNaN(Number(item.item_price)) ? 'N/A' : `$${Number(item.item_price).toFixed(2)}`}
+                  </span>
                 </div>
                 <p className="menu-description">{item.item_description}</p>
               </li>
