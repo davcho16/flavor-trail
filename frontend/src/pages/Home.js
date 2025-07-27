@@ -3,6 +3,8 @@ import axios from 'axios';
 import SearchBar from '../components/SearchBar';
 import MapView from '../components/MapView';
 import MenuModal from '../components/MenuModal';
+import ReservationModal from '../components/ReservationModal';
+import ViewReservationsModal from '../components/ViewReservationsModal';
 import './Home.css';
 
 const Home = () => {
@@ -22,6 +24,16 @@ const Home = () => {
     menuItems: [],
   });
 
+  const [reservationModal, setReservationModal] = useState({
+    open: false,
+    restaurant: null,
+  });
+
+  const [viewModal, setViewModal] = useState({
+    open: false,
+    restaurant: null,
+  });
+
   const fetchPage = async (price, zip, cuisine, rating, page) => {
     const query = new URLSearchParams();
     if (price !== null) query.append('price', price);
@@ -33,20 +45,13 @@ const Home = () => {
 
     try {
       setLoading(true);
-      const response = await axios.get(
-        `http://localhost:5000/meals/search?${query.toString()}`
-      );
-
+      const response = await axios.get(`http://localhost:5000/meals/search?${query}`);
       const data = response.data.results;
+
       setResults(data);
       setCurrentPage(page);
       setTotalPages(Math.ceil(response.data.total / 10));
-
-      if (data.length === 0) {
-        setErrorMsg('No results found. Try a different search.');
-      } else {
-        setErrorMsg('');
-      }
+      setErrorMsg(data.length === 0 ? 'No results found. Try a different search.' : '');
     } catch (err) {
       console.error('Error fetching meals:', err);
       setResults([]);
@@ -89,6 +94,14 @@ const Home = () => {
     }
   };
 
+  const handleReserveClick = (restaurant) => {
+    setReservationModal({ open: true, restaurant });
+  };
+
+  const handleViewReservationsClick = (restaurant) => {
+    setViewModal({ open: true, restaurant });
+  };
+
   return (
     <div className="home-container">
       <header className="hero">
@@ -100,48 +113,45 @@ const Home = () => {
 
       {loading && <div className="spinner" />}
       {errorMsg && <p className="error">{errorMsg}</p>}
-
       {results.length > 0 && <MapView locations={results} />}
 
       <div className="results-container">
-        {results.map((item, index) => (
-          <div
-            className="card"
-            key={index}
-            onClick={() => handleRestaurantClick(item.restaurant_id, item.restaurant_name)}
-          >
-            <h3>{item.restaurant_name}</h3>
-            <p>{item.street_address}</p>
-            <p>
-              Rating:{' '}
-              {isNaN(Number(item.rating_score))
-                ? 'N/A'
-                : Number(item.rating_score).toFixed(1)}
-            </p>
-            <p>
-              From ${isNaN(Number(item.item_price))
-                ? 'N/A'
-                : Number(item.item_price).toFixed(2)}
-            </p>
-          </div>
-        ))}
+        {results.map((item, index) => {
+          const restaurant = {
+            id: item.restaurant_id,
+            name: item.restaurant_name,
+          };
+          return (
+            <div className="card" key={index}>
+              <h3>{item.restaurant_name}</h3>
+              <p>{item.street_address}</p>
+              <p>Rating: {isNaN(item.rating_score) ? 'N/A' : Number(item.rating_score).toFixed(1)}</p>
+              <p>From ${isNaN(item.item_price) ? 'N/A' : Number(item.item_price).toFixed(2)}</p>
+              <button onClick={() => handleRestaurantClick(restaurant.id, restaurant.name)}>
+                View Menu
+              </button>
+              <button onClick={() => handleReserveClick(restaurant)}>
+                Reserve
+              </button>
+              <button onClick={() => handleViewReservationsClick(restaurant)}>
+                View Reservations
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       {results.length > 0 && (
         <div className="pagination-controls">
           <button
-            onClick={() =>
-              fetchPage(currentPriceLimit, currentZip, currentCuisine, null, currentPage - 1)
-            }
+            onClick={() => fetchPage(currentPriceLimit, currentZip, currentCuisine, null, currentPage - 1)}
             disabled={currentPage === 1}
           >
             ◀ Prev
           </button>
           <span>Page {currentPage} of {totalPages}</span>
           <button
-            onClick={() =>
-              fetchPage(currentPriceLimit, currentZip, currentCuisine, null, currentPage + 1)
-            }
+            onClick={() => fetchPage(currentPriceLimit, currentZip, currentCuisine, null, currentPage + 1)}
             disabled={currentPage === totalPages}
           >
             Next ▶
@@ -154,6 +164,22 @@ const Home = () => {
           restaurantName={modalData.restaurantName}
           menuItems={modalData.menuItems}
           onClose={() => setModalData({ ...modalData, open: false })}
+        />
+      )}
+
+      {reservationModal.open && (
+        <ReservationModal
+          isOpen={true}
+          restaurant={reservationModal.restaurant}
+          onClose={() => setReservationModal({ ...reservationModal, open: false })}
+        />
+      )}
+
+      {viewModal.open && (
+        <ViewReservationsModal
+          isOpen={true}
+          restaurant={viewModal.restaurant}
+          onClose={() => setViewModal({ ...viewModal, open: false })}
         />
       )}
     </div>

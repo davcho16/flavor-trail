@@ -7,6 +7,9 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
+        {/* Future routes can be added here */}
+        {/* <Route path="/about" element={<About />} /> */}
+        {/* <Route path="/contact" element={<Contact />} /> */}
       </Routes>
     </Router>
   );
