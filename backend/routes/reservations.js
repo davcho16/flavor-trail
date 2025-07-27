@@ -39,23 +39,32 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Retrieve all reservations by a user for a specific restaurant
+// Retrieve reservations by user_name and restaurant_id, with optional reservation_id
 router.get('/', async (req, res) => {
-  const { user_name, restaurant_id } = req.query;
+  const { user_name, restaurant_id, reservation_id } = req.query;
+
   try {
-    const result = await pool.query(
-      `SELECT r.*
-       FROM reservation r
-       JOIN makesreservation mr ON r.reservation_id = mr.reservation_id
-       WHERE r.user_name = $1 AND mr.restaurant_id = $2`,
-      [user_name, restaurant_id]
-    );
+    let query = `
+      SELECT r.*
+      FROM reservation r
+      JOIN makesreservation mr ON r.reservation_id = mr.reservation_id
+      WHERE r.user_name = $1 AND mr.restaurant_id = $2
+    `;
+    const values = [user_name, restaurant_id];
+
+    if (reservation_id) {
+      query += ` AND r.reservation_id = $3`;
+      values.push(reservation_id);
+    }
+
+    const result = await pool.query(query, values);
     res.json(result.rows);
   } catch (err) {
     console.error('Error fetching reservations:', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 // Delete a reservation by its ID (used for cancellation)
 router.delete('/:id', async (req, res) => {

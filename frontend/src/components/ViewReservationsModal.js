@@ -1,42 +1,94 @@
-// ViewReservationsModal.js
-// React component that allows users to search and view their restaurant reservations by name.
-// It sends a GET request to the backend API with the user's name and the selected restaurant ID,
-// and displays a list of matching reservations (if any) in a modal view.
-
 import React, { useState } from 'react';
-import './MenuModal.css'; // Shared modal styling
-import './ViewReservationsModal.css'; // Component-specific styling
+import './MenuModal.css';
+import './ViewReservationsModal.css';
 import axios from 'axios';
 
 const ViewReservationsModal = ({ isOpen, onClose, restaurant }) => {
   const [nameInput, setNameInput] = useState('');
+  const [reservationIdInput, setReservationIdInput] = useState('');
   const [reservations, setReservations] = useState([]);
   const [error, setError] = useState('');
+  const [editStates, setEditStates] = useState({});
+  const [selectedId, setSelectedId] = useState(null);
 
-  // Fetches reservations for the given user name and restaurant
   const handleSearch = async () => {
+    setReservations([]);
+    setError('');
+    setSelectedId(null);
+
     if (!nameInput.trim()) {
-      setReservations([]);
       setError('Please enter your name');
       return;
     }
 
-    try {
-      const res = await axios.get(
-        `http://localhost:5000/reservations?user_name=${encodeURIComponent(nameInput)}&restaurant_id=${restaurant.id}`
-      );
+    if (!reservationIdInput.trim()) {
+      setError('Reservation ID is required');
+      return;
+    }
 
-      if (res.data.length === 0) {
-        setError('Reservation does not exist');
+    if (isNaN(reservationIdInput)) {
+      setError('Reservation ID must be a number');
+      return;
+    }
+
+    try {
+      const response = await axios.get(`http://localhost:5000/reservations`, {
+        params: {
+          user_name: nameInput.trim(),
+          restaurant_id: restaurant.id,
+          reservation_id: reservationIdInput.trim()
+        }
+      });
+
+      if (response.data.length === 0) {
+        setError('No matching reservation found');
       } else {
-        setReservations(res.data);
-        setError('');
+        setReservations(response.data);
       }
     } catch (err) {
       console.error('Failed to fetch reservations:', err);
-      setReservations([]);
       setError('Error fetching reservations');
     }
+  };
+
+  const handleCancel = async (id) => {
+    try {
+      await axios.delete(`http://localhost:5000/reservations/${id}`);
+      setReservations([]);
+      setSelectedId(null);
+    } catch (err) {
+      console.error('Failed to delete:', err);
+      setError('Error cancelling reservation');
+    }
+  };
+
+  const handleUpdate = async (id) => {
+    const changes = editStates[id];
+    if (!changes?.newTime || !changes?.newPartySize) {
+      setError('Time and party size are required for update');
+      return;
+    }
+
+    try {
+      await axios.put(`http://localhost:5000/reservations/${id}`, {
+        reservation_time: changes.newTime,
+        party_size: parseInt(changes.newPartySize)
+      });
+      handleSearch();
+    } catch (err) {
+      console.error('Failed to update:', err);
+      setError('Error updating reservation');
+    }
+  };
+
+  const updateEditState = (id, field, value) => {
+    setEditStates((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [field]: value
+      }
+    }));
   };
 
   if (!isOpen) return null;
@@ -48,13 +100,22 @@ const ViewReservationsModal = ({ isOpen, onClose, restaurant }) => {
         <h2>Reservations at {restaurant.name}</h2>
 
         <div className="whiteboard">
-          <label>Enter your name to view reservations:</label>
+          <label>Enter your name:</label>
           <input
             type="text"
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
-            placeholder="Enter your name"
+            placeholder="Your name"
           />
+
+          <label>Enter Reservation ID:</label>
+          <input
+            type="text"
+            value={reservationIdInput}
+            onChange={(e) => setReservationIdInput(e.target.value)}
+            placeholder="e.g. 123"
+          />
+
           <button onClick={handleSearch}>Search</button>
 
           {error && <p className="error-message">{error}</p>}
@@ -62,12 +123,41 @@ const ViewReservationsModal = ({ isOpen, onClose, restaurant }) => {
           {reservations.length > 0 && (
             <ul className="menu-list">
               {reservations.map((r) => (
-                <li key={r.reservation_id} className="menu-item">
+                <li
+                  key={r.reservation_id}
+                  className="menu-item"
+                  onClick={() =>
+                    setSelectedId((prev) => (prev === r.reservation_id ? null : r.reservation_id))
+                  }
+                  style={{ cursor: 'pointer' }}
+                >
                   <div className="menu-header">
                     <span>ID: #{r.reservation_id}</span>
                     <span>Party: {r.party_size}</span>
                   </div>
                   <p>Time: {new Date(r.reservation_time).toLocaleString()}</p>
+
+                  {selectedId === r.reservation_id && (
+                    <div className="edit-section">
+                      <label>New Time:</label>
+                      <input
+                        type="datetime-local"
+                        onChange={(e) =>
+                          updateEditState(r.reservation_id, 'newTime', e.target.value)
+                        }
+                      />
+                      <label>New Party Size:</label>
+                      <input
+                        type="number"
+                        min="1"
+                        onChange={(e) =>
+                          updateEditState(r.reservation_id, 'newPartySize', e.target.value)
+                        }
+                      />
+                      <button onClick={() => handleUpdate(r.reservation_id)}>Update</button>
+                      <button onClick={() => handleCancel(r.reservation_id)}>Cancel Reservation</button>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
