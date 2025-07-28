@@ -33,7 +33,7 @@ def run_query(sql):
             rows = cur.fetchall()
             colnames = [desc[0] for desc in cur.description]
 
-            print("\n🟦 Result:")
+            print("\n Result:")
             print("-" * 50)
             print("\t".join(colnames))
             print("-" * 50)
@@ -52,14 +52,20 @@ def run_query(sql):
 
 def main():
     print("Flavor Trail CLI (Python)")
-    print("Type any SQL query or 'exit' to quit.\n")
+    print("Type your SQL query below. End with `;` on a new line. Type `exit` to quit.\n")
     while True:
-        sql = input("SQL> ")
-        if sql.lower() == "exit":
-            break
-        if not sql.strip():
-            continue
-        run_query(sql)
+        sql_lines = []
+        print("Enter SQL query (end with `;` on its own line):")
+        while True:
+            line = input("SQL> ")
+            if line.strip().lower() == "exit":
+                return
+            if line.strip() == ";":
+                break
+            sql_lines.append(line)
+        sql = " ".join(sql_lines).strip()
+        if sql:
+            run_query(sql)
 
 if __name__ == "__main__":
     main()
